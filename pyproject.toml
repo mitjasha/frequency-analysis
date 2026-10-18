@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "frequency-analysis-toolkit"
+version = "0.1.0"
+description = "Scientific signal processing and vibration frequency analysis"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Dzmitry Shakhrai"}]
+dependencies = ["numpy>=1.24", "scipy>=1.10", "pandas>=2.0"]
+keywords = ["vibration", "signal processing", "frequency analysis", "modal analysis"]
+classifiers = ["Programming Language :: Python :: 3", "Topic :: Scientific/Engineering"]
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+plot = ["matplotlib>=3.7"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
