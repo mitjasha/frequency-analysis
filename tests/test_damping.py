@@ -20,6 +20,8 @@ def test_recover_known_damping_ratio():
     fit = estimate_damping(x, fs, 50, fit_start_s=0.15, fit_end_s=1.3)
     assert fit.damping_ratio == pytest.approx(.01, rel=.04)
     assert fit.fit_r_squared > .99
+    assert fit.measured_peak_frequency_hz == pytest.approx(50, abs=1)
+    assert fit.frequency_mismatch_hz <= 1
 
 
 def test_zero_phase_filter_reject_invalid_band():
@@ -40,3 +42,20 @@ def test_reject_bad_fit_interval():
                            frequency_hz=50, damping_ratio=.02)
     with pytest.raises(ValueError):
         estimate_damping(x, 1000, 50, fit_start_s=.5, fit_end_s=2)
+
+
+def test_frequency_mismatch_is_reported():
+    fs = 2000.0
+    _, x = damped_sinusoid(sample_rate_hz=fs, duration_s=2,
+                           frequency_hz=80, damping_ratio=.01)
+    fit = estimate_damping(x, fs, 75, fit_start_s=.1, fit_end_s=1.5)
+    assert fit.measured_peak_frequency_hz == pytest.approx(80, abs=1)
+    assert fit.frequency_mismatch_hz == pytest.approx(5, abs=1)
+
+
+def test_filter_band_must_contain_assumed_frequency():
+    _, x = damped_sinusoid(sample_rate_hz=1000, duration_s=1,
+                           frequency_hz=50, damping_ratio=.02)
+    with pytest.raises(ValueError, match="must contain"):
+        estimate_damping(x, 1000, 50, fit_start_s=.1, fit_end_s=.8,
+                         band_hz=(60, 80))

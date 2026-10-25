@@ -30,7 +30,7 @@ A least-squares fit of `ln(abs(hilbert(x)))` to time gives `alpha > 0`, then
 
 `omega_n = sqrt((2*pi*f_d)**2 + alpha**2)` and `zeta = alpha/omega_n`.
 
-The envelope near record endpoints can be biased by the Hilbert transform. The fit window must avoid forcing, filter transients, beating from nearby modes and noise floor. `fit_r_squared` only scores an exponential envelope fit, not a proof of a single physical vibration mode. A multi-degree-of-freedom system may require FRFs or appropriate operational modal analysis before reporting modal parameters.
+The envelope near record endpoints can be biased by the Hilbert transform. The fit window must avoid forcing, filter transients, beating from nearby modes and noise floor. `fit_r_squared` only scores an exponential envelope fit, not a proof of a single physical vibration mode. Compare `measured_peak_frequency_hz` and `frequency_mismatch_hz` with the supplied damped frequency before interpreting the damping ratio; a mismatch signals that the assumed mode may not dominate the selected fit interval. A multi-degree-of-freedom system may require FRFs or appropriate operational modal analysis before reporting modal parameters.
 
 ## Automated checks
 

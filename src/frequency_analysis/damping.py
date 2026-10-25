@@ -10,6 +10,8 @@ from .spectral import _validate
 @dataclass(frozen=True)
 class DampingResult:
     damped_frequency_hz: float
+    measured_peak_frequency_hz: float
+    frequency_mismatch_hz: float
     decay_rate_per_s: float
     damping_ratio: float
     undamped_frequency_hz: float
@@ -53,6 +55,8 @@ def estimate_damping(
     omega_n=sqrt(omega_d**2+alpha**2), zeta=alpha/omega_n. The user must select
     a reliable free-decay interval away from impacts, noise floor, and Hilbert
     endpoint transients. R² is a diagnostic, not proof of a modal interpretation.
+    The measured spectral peak and its mismatch from ``damped_frequency_hz``
+    are returned to expose an inconsistent modal-frequency assumption.
     """
     data = _validate(signal, sampling_rate_hz)
     if not (np.isfinite(damped_frequency_hz) and 0 < damped_frequency_hz < sampling_rate_hz / 2):
@@ -62,6 +66,8 @@ def estimate_damping(
             and 0 <= fit_start_s < fit_end_s <= duration):
         raise ValueError("fit interval must be within the recorded time")
     if band_hz is not None:
+        if not (band_hz[0] < damped_frequency_hz < band_hz[1]):
+            raise ValueError("band_hz must contain damped_frequency_hz")
         data = bandpass_filter(data, sampling_rate_hz, *band_hz)
     t, envelope = analytic_envelope(data, sampling_rate_hz)
     mask = (t >= fit_start_s) & (t <= fit_end_s)
@@ -72,6 +78,18 @@ def estimate_damping(
         raise ValueError("envelope contains zero values in fit interval")
     log_amplitude = np.log(selected)
     x = t[mask]
+    spectral_data = data[mask] - np.mean(data[mask])
+    spectral_values = np.abs(np.fft.rfft(spectral_data * np.hanning(mask.sum())))
+    spectral_frequency = np.fft.rfftfreq(mask.sum(), d=1 / sampling_rate_hz)
+    candidate = np.ones_like(spectral_frequency, dtype=bool)
+    candidate[0] = False
+    if band_hz is not None:
+        candidate &= (spectral_frequency >= band_hz[0]) & (spectral_frequency <= band_hz[1])
+    if not np.any(candidate):
+        raise ValueError("fit interval is too short to resolve a frequency in band_hz")
+    candidate_indices = np.flatnonzero(candidate)
+    peak_index = candidate_indices[np.argmax(spectral_values[candidate])]
+    measured_frequency = float(spectral_frequency[peak_index])
     slope, intercept = np.polyfit(x, log_amplitude, 1)
     prediction = slope * x + intercept
     sst = np.sum((log_amplitude - log_amplitude.mean()) ** 2)
@@ -80,5 +98,9 @@ def estimate_damping(
     if alpha <= 0:
         raise ValueError("fitted envelope is not decaying")
     omega_n = float(np.hypot(2 * np.pi * damped_frequency_hz, alpha))
-    return DampingResult(float(damped_frequency_hz), alpha, alpha / omega_n,
-                         omega_n / (2 * np.pi), float(r2), float(fit_start_s), float(fit_end_s))
+    return DampingResult(
+        float(damped_frequency_hz), measured_frequency,
+        abs(measured_frequency - float(damped_frequency_hz)), alpha,
+        alpha / omega_n, omega_n / (2 * np.pi), float(r2),
+        float(fit_start_s), float(fit_end_s),
+    )

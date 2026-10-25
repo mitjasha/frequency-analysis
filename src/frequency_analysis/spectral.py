@@ -113,7 +113,7 @@ def detect_peaks(
             or min_prominence < 0 or not np.isfinite(min_prominence)
             or min_distance_hz < 0 or not np.isfinite(min_distance_hz)):
         raise ValueError("invalid peak-search parameters")
-    if limit is not None and limit < 1:
+    if limit is not None and (not isinstance(limit, int) or isinstance(limit, bool) or limit < 1):
         raise ValueError("limit must be a positive integer")
     distance = max(1, int(np.ceil(min_distance_hz / spectrum.resolution_hz)))
     idx, props = find_peaks(y, prominence=min_prominence, distance=distance)
