@@ -54,6 +54,7 @@ result = estimate_damping(record.samples[:, 0], record.sampling_rate_hz,
                           damped_frequency_hz=50,
                           fit_start_s=0.15, fit_end_s=1.3)
 print(result.damping_ratio, result.fit_r_squared)
+print(result.measured_peak_frequency_hz, result.frequency_mismatch_hz)
 ```
 
 The selected interval **must represent isolated, approximately linear single-mode free decay**, after initial forcing and before the noise floor. For multi-mode signals, first isolate the band if justified, examine the envelope and reassess fit quality. See [validation and limitations](docs/validation.md).

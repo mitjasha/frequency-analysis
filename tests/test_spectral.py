@@ -53,3 +53,10 @@ def test_reject_bad_rate(bad_fs):
 def test_reject_multichannel_without_selection():
     with pytest.raises(ValueError):
         fft_spectrum(np.ones((100, 2)), 1000)
+
+
+@pytest.mark.parametrize("limit", [1.5, True, 0, -1])
+def test_reject_non_positive_integer_peak_limit(limit):
+    spectrum = fft_spectrum(np.arange(16), 1000)
+    with pytest.raises(ValueError, match="positive integer"):
+        detect_peaks(spectrum, limit=limit)

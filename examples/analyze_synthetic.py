@@ -9,3 +9,5 @@ fit = estimate_damping(signal, fs, 50.0, fit_start_s=0.15, fit_end_s=1.3)
 print(f"Main spectral peak: {peaks[0].frequency_hz:.2f} Hz")
 print(f"Known damping ratio: 1.000%")
 print(f"Estimated damping ratio: {fit.damping_ratio*100:.3f}% (fit R²={fit.fit_r_squared:.4f})")
+print(f"Measured peak: {fit.measured_peak_frequency_hz:.3f} Hz "
+      f"(mismatch={fit.frequency_mismatch_hz:.3f} Hz)")
